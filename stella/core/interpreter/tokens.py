@@ -2,6 +2,8 @@
 
 import re
 
+__all__ = ['TokenType', 'Token']
+
 ################################################################################
 ### TokenType
 ################################################################################
@@ -14,17 +16,20 @@ class _TokenType(tuple):
         new = _TokenType(self + (name,))
         setattr(self, name, new)
         new.parent = self
+        new.name = name
 
         def token(expr=None):
-            new.expr = re.compile(expr) if expr else None
+            new.expr = expr
+            new.compiled_expr = re.compile(expr) if expr else None
             return new
+
         return token
 
     def __repr__(self):
         return 'TokenType' + ('.' if self else '') + '.'.join(self)
     
     def match(self, value):
-        return self.expr.fullmatch(value) if self.expr else None
+        return self.compiled_expr.fullmatch(value) if self.expr else None
 
 TokenType = _TokenType()
 
@@ -33,9 +38,12 @@ TokenType = _TokenType()
 ################################################################################
 
 class Token(object):
-    def __init__(self, token_type, value):
-        self.token_type = token_type
+    def __init__(self, ttype, value):
+        self.ttype = ttype
         self.value = value
+        
+    def __eq__(self, other):
+        return self.ttype == other.ttype and self.value == other.value
 
     def __repr__(self):
         return '(' + repr(self.token_type) + ', "' + self.value + '")'

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .tokens import TokenType, Token
-from .lexer import Tokenizer, Lexer
-from .parser import Parser
+from .tokens import *
+from .lexer import *
+from .parser import *

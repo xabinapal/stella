@@ -3,8 +3,10 @@
 import io
 import collections
 
-import core.utils
-import core.interpreter.tokens
+from stella.core.utils import CharStream, Rewinder
+from stella.core.interpreter.tokens import Token
+
+__all__ = ['Tokenizer', 'Lexer']
 
 ################################################################################
 ### Tokenizer
@@ -23,12 +25,12 @@ class Tokenizer(object):
 
 class Lexer(object):
     def __init__(self, stream, tokenizer):
-        char_stream = core.utils.CharStream(stream)
-        self.iterator = core.utils.Rewinder(char_stream)
+        char_stream = CharStream(stream)
+        self.iterator = Rewinder(char_stream)
         self.tokenizer = tokenizer
 
     def __iter__(self):
-        return core.utils.Rewinder(self)
+        return Rewinder(self)
 
     def __next__(self):
         token = None
@@ -60,4 +62,4 @@ class Lexer(object):
                 break
 
         self.iterator.commit()
-        return core.interpreter.tokens.Token(token, value)
+        return Token(token, value)
