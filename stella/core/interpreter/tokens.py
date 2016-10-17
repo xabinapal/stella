@@ -16,7 +16,7 @@ class _TokenType(tuple):
         new.parent = self
 
         def token(expr=None):
-            new.expr = re.compile(expr, re.IGNORECASE) if expr else None
+            new.expr = re.compile(expr) if expr else None
             return new
         return token
 
