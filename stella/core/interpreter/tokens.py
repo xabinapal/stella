@@ -13,7 +13,7 @@ class _TokenType(tuple):
         return item is not None and (self is item or item[:len(self)] == self)
     
     def __getattr__(self, name):
-        new = _TokenType(self + (name,))
+        new = self.__class__(self + (name,))
         setattr(self, name, new)
         new.parent = self
         new.name = name
@@ -46,4 +46,4 @@ class Token(object):
         return self.ttype == other.ttype and self.value == other.value
 
     def __repr__(self):
-        return '(' + repr(self.token_type) + ', "' + self.value + '")'
+        return '(' + repr(self.ttype) + ', "' + self.value + '")'

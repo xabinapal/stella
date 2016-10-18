@@ -17,10 +17,10 @@ class ParseError(SyntaxError):
 
 class Parser(object):
     def __init__(self, lexer):
-        self.lexer = core.utils.Rewinder(lexer)
+        self.lexer = Rewinder(lexer)
 
     def __iter__(self):
-        return core.utils.Rewinder(self)
+        return Rewinder(self)
 
     def __next__(self):
         token = next(self.lexer)

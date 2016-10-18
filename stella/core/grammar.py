@@ -1,42 +1,50 @@
 # -*- coding: utf-8 -*-
 
 from stella.core.interpreter.tokens import TokenType
+from stella.core.interpreter.statements import StatementType
 
-__all__ = ['Tokens']
+__all__ = ['Tokens, Statements']
 
 ################################################################################
 ### Keywords
 ################################################################################
 
 Keyword = TokenType.Keyword()
+FlowControl = Keyword.FlowControl()
+DataType = Keyword.DataType()
 
-Keywords = (
-    Keyword.BREAK('BREAK'),
-    Keyword.CASE('CASE'),
-    Keyword.CONTINUE('CONTINUE'),
-    Keyword.DO('DO'),
-    Keyword.ELSE('ELSE'),
-    Keyword.FLOAT('FLOAT'),
-    Keyword.FOR('FOR'),
-    Keyword.IF('IF'),
-    Keyword.INT('INT'),
-    Keyword.RETURN('RETURN'),
-    Keyword.SWITCH('SWITCH'),
-    Keyword.WHILE('WHILE'),
-    Keyword.BOOL('BOOL'),
+FlowControlKeywords = (
+    Keyword.FlowControl.FUNCTION('FUNCTION'),
+    Keyword.FlowControl.IF('IF'),
+    Keyword.FlowControl.ELSE('ELSE'),
+    Keyword.FlowControl.WHILE('WHILE'),
+    Keyword.FlowControl.FOR('FOR'),
+    Keyword.FlowControl.BREAK('BREAK'),
+    Keyword.FlowControl.CONTINUE('CONTINUE'),
+    Keyword.FlowControl.RETURN('RETURN'),
 )
+
+DataTypeKeywords = (
+    Keyword.DataType.DECIMAL('DECIMAL'),
+    Keyword.DataType.INTEGER('INTEGER'),
+)
+
+Keywords = FlowControlKeywords + DataTypeKeywords
 
 ################################################################################
 ### Identifiers
 ################################################################################
 
 Identifier = TokenType.Identifier()
+Comment = Identifier.Comment()
 
 Identifiers = (
     Identifier.LITERAL(r'[a-zA-Z_][a-zA-Z0-9_]*'),
-    Identifier.WHITESPACE(r'[\s\t]+'),
+    Identifier.WS(r'[\s\t]+'),
     Identifier.NEWLINE(r'\r?\n'),
-    Identifier.COMMENT(r'#.*\n?'),
+    Comment.STR(r'/\*'),
+    Comment.END(r'\*/'),
+    Comment.LINE(r'//.*\n?'),
 )
 
 ################################################################################
@@ -109,3 +117,23 @@ Punctuators = (
 ################################################################################
 
 Tokens = Keywords + Identifiers + Constants + Punctuators
+
+################################################################################
+### Statements
+################################################################################
+
+Statement = StatementType.SpaceSplit(separator=r'({t.WHITESPACE}|{t.NEWLINE})*', ignore=r'{t.COMMENT}')
+Jump = Statement.Jump()
+
+JumpStatements = (
+    Jump.Break(r'{t.BREAK}{t.SEMICOLON}'),
+    Jump.Continue(r'{t.CONTINUE}{t.SEMICOLON}'),
+)
+
+Statements = (
+    Statement.Empty(r'{t.SEMICOLON}'),
+    Statement.Block(r'{t.LBRACE}{s}{t.RBRACE}'),
+    Statement.FunctionArguments(r'{t.DataType}{t.LITERAL}({t.COMMA}{s.FunctionArguments))?'),
+    Statement.FunctionArgumentList(r'{t.LPAREN}{s.FunctionArguments}{t.RPAREN}'),
+    Statement.Function(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{t.FunctionArgumentList}{s.Block}'),
+)

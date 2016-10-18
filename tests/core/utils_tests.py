@@ -36,10 +36,22 @@ class RewinderTest(unittest.TestCase):
     def _test_rewinder(self, rewinder, value):
         fullread = ''.join(x for x in rewinder)
         self.assertEqual(fullread, value)
+        with self.assertRaises(StopIteration):
+            next(rewinder)
 
     def _test_length_rewinder(self, rewinder, value):
         fullread = ''.join(next(rewinder) for _ in range(len(value)))
         self.assertEqual(fullread, value)
+
+    def _test_peek_rewinder(self, rewinder):
+        peek = rewinder.peek()
+        for x in rewinder:
+            self.assertEqual(peek, x)
+            try:
+                peek = rewinder.peek()
+            except:
+                with self.assertRaises(StopIteration):
+                    next(rewinder)
 
     def test_fullread(self):
         rewinder = self._get_rewinder()
@@ -63,3 +75,13 @@ class RewinderTest(unittest.TestCase):
         rewinder.commit()
         rewinder.rewind()
         self._test_rewinder(rewinder, 'World')
+
+    def test_peek(self):
+        rewinder = self._get_rewinder()
+        self._test_peek_rewinder(rewinder)
+
+    def test_peekrewind(self):
+        rewinder = self._get_rewinder()
+        self._test_peek_rewinder(rewinder)
+        rewinder.rewind()
+        self._test_peek_rewinder(rewinder)
