@@ -18,12 +18,11 @@ class _StatementType(tuple):
         new.parent = self
         new.name = name
 
-        def token(expr=None):
+        def statement(expr=None):
             new.expr = expr
-
             return new
 
-        return token
+        return statement
 
     def __repr__(self):
         return 'StatementType' + ('.' if self else '') + '.'.join(self)

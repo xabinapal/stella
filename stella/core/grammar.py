@@ -14,19 +14,19 @@ FlowControl = Keyword.FlowControl()
 DataType = Keyword.DataType()
 
 FlowControlKeywords = (
-    Keyword.FlowControl.FUNCTION('FUNCTION'),
-    Keyword.FlowControl.IF('IF'),
-    Keyword.FlowControl.ELSE('ELSE'),
-    Keyword.FlowControl.WHILE('WHILE'),
-    Keyword.FlowControl.FOR('FOR'),
-    Keyword.FlowControl.BREAK('BREAK'),
-    Keyword.FlowControl.CONTINUE('CONTINUE'),
-    Keyword.FlowControl.RETURN('RETURN'),
+    Keyword.FlowControl.FUNCTION(r'function'),
+    Keyword.FlowControl.IF(r'if'),
+    Keyword.FlowControl.ELSE(r'else'),
+    Keyword.FlowControl.WHILE(r'while'),
+    Keyword.FlowControl.FOR(r'for'),
+    Keyword.FlowControl.BREAK(r'break'),
+    Keyword.FlowControl.CONTINUE(r'continue'),
+    Keyword.FlowControl.RETURN(r'return'),
 )
 
 DataTypeKeywords = (
-    Keyword.DataType.DECIMAL('DECIMAL'),
-    Keyword.DataType.INTEGER('INTEGER'),
+    Keyword.DataType.INTEGER('int'),
+    Keyword.DataType.FLOATING('float'),
 )
 
 Keywords = FlowControlKeywords + DataTypeKeywords
@@ -57,7 +57,7 @@ FloatingConstant = Constant.FloatingConstant()
 
 Constants = (
     IntegerConstant.DECIMAL(r'(0|[1-9][0-9]*)'),
-    IntegerConstant.HEXADECIMAL(r'0x[0-9a-fA-F]*'),
+    IntegerConstant.HEXADECIMAL(r'0x[a-fA-F0-9]*'),
     IntegerConstant.OCTAL(r'0[0-7]+'),
     IntegerConstant.BINARY(r'0b[0-1]*'),
     FloatingConstant.DECIMAL(r'([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)'),
@@ -139,16 +139,16 @@ ControlStatements = (
 )
 
 Statements = (
-    Statement.Empty(r'{t.SEMICOLON}'),
-    Statement.Block(r'{t.LBRACE}{s}{t.RBRACE}'),
+    StatementType.Empty(r'{t.SEMICOLON}'),
+    StatementType.Block(r'{t.LBRACE}{s}{t.RBRACE}'),
 
-    Statement.FunctionArguments(
+    StatementType.FunctionArguments(
         r'{t.DataType}{t.LITERAL}({t.COMMA}{s.FunctionArguments})?'),
 
-    Statement.FunctionArgumentList(
+    StatementType.FunctionArgumentList(
         r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
     
-    Statement.Function(
+    StatementType.Function(
         r'{t.FUNCTION}{t.DataType}{t.LITERAL}{t.FunctionArgumentList}{s.Block}'),
 )
 

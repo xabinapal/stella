@@ -6,7 +6,14 @@ import collections
 from stella.core.utils import CharStream, Rewinder
 from stella.core.interpreter.tokens import Token
 
-__all__ = ['Tokenizer', 'Lexer']
+__all__ = ['LexError', 'Tokenizer', 'Lexer']
+
+################################################################################
+### LexError
+################################################################################
+
+class LexError(SyntaxError):
+    pass
 
 ################################################################################
 ### Tokenizer
@@ -25,8 +32,8 @@ class Tokenizer(object):
 
 class Lexer(object):
     def __init__(self, stream, tokenizer):
-        char_stream = CharStream(stream)
-        self.iterator = Rewinder(char_stream)
+        iterator = iter(stream)
+        self.iterator = Rewinder(iterator)
         self.tokenizer = tokenizer
 
     def __iter__(self):

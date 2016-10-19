@@ -14,17 +14,17 @@ class CharStreamTest(unittest.TestCase):
         stream = io.BytesIO(b'Hello World')
         self._test_charstream(stream, 'Hello World')
 
-    def test_unicode_bytesio(self):
-        stream = io.BytesIO(b'H\xe2\xac\x86e\xe2\x9e\xa1l\xe2\xac\x87l\xe2\xac\x85o')
-        self._test_charstream(stream, 'H⬆e➡l⬇l⬅o')
-
     def test_ascii_stringio(self):
         stream = io.StringIO('Hello World')
         self._test_charstream(stream, 'Hello World')
 
+    def test_unicode_bytesio(self):
+        stream = io.BytesIO(b'\xe2\xac\x86Hello\xe2\xac\x87')
+        self._test_charstream(stream, '⬆Hello⬇')
+
     def test_unicode_stringio(self):
-        stream = io.StringIO('W⬆o➡r⬇l⬅d')
-        self._test_charstream(stream, 'W⬆o➡r⬇l⬅d')
+        stream = io.StringIO('⬆World⬇')
+        self._test_charstream(stream, '⬆World⬇')
 
 class RewinderTest(unittest.TestCase):
     def _get_rewinder(self):
