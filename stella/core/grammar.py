@@ -122,18 +122,34 @@ Tokens = Keywords + Identifiers + Constants + Punctuators
 ### Statements
 ################################################################################
 
-Statement = StatementType.SpaceSplit(separator=r'({t.WHITESPACE}|{t.NEWLINE})*', ignore=r'{t.COMMENT}')
-Jump = Statement.Jump()
+Jump = StatementType.Jump()
 
 JumpStatements = (
     Jump.Break(r'{t.BREAK}{t.SEMICOLON}'),
     Jump.Continue(r'{t.CONTINUE}{t.SEMICOLON}'),
 )
 
+Control = StatementType.Control()
+
+ControlStatements = (
+    Control.If(r''),
+    Control.IfElse(r''),
+    Control.While(r''),
+    Control.For(r'')
+)
+
 Statements = (
     Statement.Empty(r'{t.SEMICOLON}'),
     Statement.Block(r'{t.LBRACE}{s}{t.RBRACE}'),
-    Statement.FunctionArguments(r'{t.DataType}{t.LITERAL}({t.COMMA}{s.FunctionArguments))?'),
-    Statement.FunctionArgumentList(r'{t.LPAREN}{s.FunctionArguments}{t.RPAREN}'),
-    Statement.Function(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{t.FunctionArgumentList}{s.Block}'),
+
+    Statement.FunctionArguments(
+        r'{t.DataType}{t.LITERAL}({t.COMMA}{s.FunctionArguments})?'),
+
+    Statement.FunctionArgumentList(
+        r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
+    
+    Statement.Function(
+        r'{t.FUNCTION}{t.DataType}{t.LITERAL}{t.FunctionArgumentList}{s.Block}'),
 )
+
+Statements = JumpStatements + ControlStatements

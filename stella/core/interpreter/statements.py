@@ -18,10 +18,8 @@ class _StatementType(tuple):
         new.parent = self
         new.name = name
 
-        def token(expr=None, separator=None, ignore=None):
+        def token(expr=None):
             new.expr = expr
-            new.separator = separator if separator else new.parent.separator
-            new.ignore = ignore if ignore else new.parent.ignore
 
             return new
 
