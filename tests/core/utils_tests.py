@@ -10,6 +10,14 @@ class CharStreamTest(unittest.TestCase):
         charstream = CharStream(stream)
         self.assertEqual(''.join(c for c in charstream), value)
 
+    def test_ascii_bytes(self):
+        stream = b'Hello World'
+        self._test_charstream(stream, 'Hello World')
+
+    def test_ascii_str(self):
+        stream = 'Hello World'
+        self._test_charstream(stream, 'Hello World')
+
     def test_ascii_bytesio(self):
         stream = io.BytesIO(b'Hello World')
         self._test_charstream(stream, 'Hello World')
@@ -17,6 +25,14 @@ class CharStreamTest(unittest.TestCase):
     def test_ascii_stringio(self):
         stream = io.StringIO('Hello World')
         self._test_charstream(stream, 'Hello World')
+
+    def test_unicode_bytes(self):
+        stream = b'\xe2\xac\x86Hello\xe2\xac\x87'
+        self._test_charstream(stream, '⬆Hello⬇')
+
+    def test_unicode_str(self):
+        stream = '⬆World⬇'
+        self._test_charstream(stream, '⬆World⬇')
 
     def test_unicode_bytesio(self):
         stream = io.BytesIO(b'\xe2\xac\x86Hello\xe2\xac\x87')

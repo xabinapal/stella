@@ -4,7 +4,8 @@ import io
 import unittest
 
 from stella.core.utils import CharStream
-from stella.core.interpreter import Token, Tokenizer, Lexer, Parser
+from stella.core.interpreter.lexer import Tokenizer, Lexer
+from stella.core.interpreter.parser import Parser
 from stella.core.grammar import Keywords, Tokens
 
 class LexerTest(unittest.TestCase):

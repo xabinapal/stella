@@ -14,7 +14,6 @@ class _TokenType(tuple):
     
     def __getattr__(self, name):
         new = self.__class__(self + (name,))
-        setattr(self, name, new)
         new.parent = self
         new.name = name
 

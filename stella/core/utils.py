@@ -5,13 +5,16 @@ import collections
 
 __all__ = ['CharStream', 'Rewinder']
 
+bytes_iterator = type(iter(b''))
+str_iterator = type(iter(''))
+
 ################################################################################
 ### CharStream
 ################################################################################
 
 class CharStream(object):
     def __init__(self, stream, encoding='utf-8'):
-        self.stream = stream
+        self.stream = iter(stream) if type(stream) in (str, bytes) else stream
         self.encoding = encoding
 
     def __iter__(self):
@@ -32,6 +35,11 @@ class CharStream(object):
         return c
 
     def _read(self):
+        if type(self.stream) == bytes_iterator:
+            return bytes([next(self.stream)])
+        if type(self.stream) == str_iterator:
+            return next(self.stream)
+
         c = self.stream.read(1)
         if not c:
             raise StopIteration

@@ -1,41 +1,59 @@
-from stella.core.interpreter import _TokenType, Tokenizer, Lexer
-from stella.core.automata import NFA
+from stella.core.interpreter.tokens import _TokenType
+from stella.core.interpreter.lexer import Tokenizer, Lexer
+from stella.core.automata import NFA, EpsilonTransition
 from stella.core.utils import CharStream
 
-__all__ = ['RegexToken', 'regex_to_nfa']
+import io
+
+__all__ = ['RegexToken', 'convert_to_nfa']
 
 RegexToken = _TokenType()
 
 _lparen = RegexToken.LPAREN(r'\(')
 _rparen = RegexToken.RPAREN(r'\)')
-_question = RegexToken.QUESTION(r'\?')
-_plus = RegexToken.PLUS(r'\+')
-_asterisk = RegexToken.ASTERISK(r'\*')
-_verticalbar = RegexToken.VERTICALBAR(r'\|')
+_union  = RegexToken.UNION(r'\|')
+_star   = RegexToken.STAR(r'\*')
 
-_tokens = (_lparen, _rparen, _question, _plus, _asterisk)
+_tokens = (_lparen, _rparen, _union, _star)
 
-def regex_to_nfa(regex, token, equal):
+def _create_lexer(regex, token):
+    regex = io.StringIO('(' + regex + ')')
     stream = CharStream(regex)
-    tokens = (*_tokens, token)
-    tokenizer = Tokenizer(tokens)
+    tokenizer = Tokenizer((*_tokens, token))
     lexer = Lexer(stream, tokenizer)
-    return _lexer_to_nfa(lexer, equal)
+    return lexer
 
-def _lexer_to_nfa(lexer, equal, end=None):
+def convert_to_nfa(regex, token):
+    token = RegexToken.TOKEN(token)
+    lexer = _create_lexer(regex, token)
     nfa = NFA()
 
-    for x in stream:
-        if end and equal(end, x):
-            lexer.commit()
-            return nfa
+    lparen_pos = None
+    unions = []
 
-        if x.ttype == _lparen:
-            lexer.commit()
-            nfa.add_sub_nfa(_lexer_to_nfa(lexer, equal, _rparen))
-        elif x.ttype not in _tokens:
-            nfa.add_operand(x.value)
+    for x in lexer:
+        i = nfa.state_count
+        nfa.add_state(i)
+
+        if x.ttype == token:
+            nfa.add_transition(i, i + 1, x.value)
+        elif x.ttype == _union:
+            nfa.add_transition(lparen_pos, i, EpsilonTransition)
         else:
-            nfa.modify_last_operand(x.value)
+            nfa.add_transition(i, i + 1, EpsilonTransition)
+
+            if x.ttype in _lparen:
+                lparen_pos = i
+            
+            elif x.ttype in _rparen:
+                while unions:
+                    nfa.add_transition(unions.pop(), i, EpsilonTransition)
+                lparen_pos = None
+
+            elif x.ttype == _star:
+                nfa.add_transition(i, i - 1, EpsilonTransition)
+                nfa.add_transition(i - 1, i, EpsilonTransition)
+
+    nfa.add_state(name=nfa.state_count, accepting=True)
 
     return nfa

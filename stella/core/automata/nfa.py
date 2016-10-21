@@ -1,20 +1,16 @@
-from stella.core.automata import State, Epsilon
-
-def transition_function(state, transitions, )
+from stella.core.automata import TransitionTable, AutomatonState
 
 class NFA(object):
-    def __init__(self):
-        initial_state = State()
-        self.state_count = 1
-        self.states = {self.state_count: initial_state}
-        self.transitions = {self.state_count: {}}
-        self.last_operand
-    
-    def add_operand(self, value):
-        self.last_operand = value
+    def __init__(self, states=[], transitions=TransitionTable(True)):
+        self.states = states
+        self.state_count = len(states)
+        self.transitions = transitions
 
-    def add_sub_nfa(self, nfa):
-        self.last_operand = nfa
+    def add_state(self, name, accepting=False):
+        state = AutomatonState(name, accepting)
+        self.states.append(state)
+        self.state_count += 1
+        return state
 
-    def modify_last_operand(self, value):
-        pass
+    def add_transition(self, initial_state, final_state, value):
+        self.transitions.add(initial_state, final_state, value)
