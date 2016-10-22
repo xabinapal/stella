@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .automata import *
-from .nfa import *
+from .enfa import *
 from .regex import *

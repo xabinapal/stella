@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from stella.core.utils import CharStream, Rewinder
+
 import io
 import unittest
-
-from stella.core.utils import CharStream, Rewinder
 
 class CharStreamTest(unittest.TestCase):
     def _test_charstream(self, stream, value):

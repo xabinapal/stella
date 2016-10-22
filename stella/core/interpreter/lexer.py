@@ -3,7 +3,7 @@
 import io
 import collections
 
-from stella.core.utils import CharStream, Rewinder
+from stella.core.utils import Rewinder
 from stella.core.interpreter.tokens import Token
 
 __all__ = ['LexError', 'Tokenizer', 'Lexer']
@@ -44,6 +44,7 @@ class Lexer(object):
 
         tmp_value = next(self.iterator)
         tmp_token = self.tokenizer.get_token(tmp_value)
+
         token_found = False
         while tmp_token or not token_found:
             if tmp_token:

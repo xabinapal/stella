@@ -30,6 +30,10 @@ class _TokenType(tuple):
     def match(self, value):
         return self.compiled_expr.fullmatch(value) if self.expr else None
 
+    def is_of(self, value):
+        #TODO
+        return True
+
 TokenType = _TokenType()
 
 ################################################################################
@@ -42,6 +46,9 @@ class Token(object):
         self.value = value
         
     def __eq__(self, other):
+        if type(other) != Token:
+            return False
+
         return self.ttype == other.ttype and self.value == other.value
 
     def __repr__(self):

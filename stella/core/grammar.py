@@ -14,19 +14,19 @@ FlowControl = Keyword.FlowControl()
 DataType = Keyword.DataType()
 
 FlowControlKeywords = (
-    Keyword.FlowControl.FUNCTION(r'function'),
-    Keyword.FlowControl.IF(r'if'),
-    Keyword.FlowControl.ELSE(r'else'),
-    Keyword.FlowControl.WHILE(r'while'),
-    Keyword.FlowControl.FOR(r'for'),
-    Keyword.FlowControl.BREAK(r'break'),
-    Keyword.FlowControl.CONTINUE(r'continue'),
-    Keyword.FlowControl.RETURN(r'return'),
+    FlowControl.FUNCTION(r'function'),
+    FlowControl.IF(r'if'),
+    FlowControl.ELSE(r'else'),
+    FlowControl.WHILE(r'while'),
+    FlowControl.FOR(r'for'),
+    FlowControl.BREAK(r'break'),
+    FlowControl.CONTINUE(r'continue'),
+    FlowControl.RETURN(r'return'),
 )
 
 DataTypeKeywords = (
-    Keyword.DataType.INTEGER('int'),
-    Keyword.DataType.FLOATING('float'),
+    DataType.INTEGER('int'),
+    DataType.FLOATING('float'),
 )
 
 Keywords = FlowControlKeywords + DataTypeKeywords
@@ -38,13 +38,16 @@ Keywords = FlowControlKeywords + DataTypeKeywords
 Identifier = TokenType.Identifier()
 Comment = Identifier.Comment()
 
+_literal = Identifier.LITERAL(r'[a-zA-Z_][a-zA-Z0-9_]*')
+_whitespace = Identifier.WSPACE(r'[\s\t]+')
+_newline = Identifier.NLINE(r'\r?\n')
+_comment_line = Comment.LINE(r'//.*\n?')
+_comment_start = Comment.START(r'/\*')
+_comment_end = Comment.END(r'\*/')
+
 Identifiers = (
-    Identifier.LITERAL(r'[a-zA-Z_][a-zA-Z0-9_]*'),
-    Identifier.WS(r'[\s\t]+'),
-    Identifier.NEWLINE(r'\r?\n'),
-    Comment.STR(r'/\*'),
-    Comment.END(r'\*/'),
-    Comment.LINE(r'//.*\n?'),
+    _literal, _whitespace, _newline,
+    _comment_line, _comment_start, _comment_end,
 )
 
 ################################################################################
@@ -117,6 +120,12 @@ Punctuators = (
 ################################################################################
 
 Tokens = Keywords + Identifiers + Constants + Punctuators
+IgnoreTokens = (
+    (_whitespace,),
+    (_newline,),
+    (_comment_line,),
+    (_comment_start, _comment_end),
+)
 
 ################################################################################
 ### Statements
@@ -129,27 +138,30 @@ JumpStatements = (
     Jump.Continue(r'{t.CONTINUE}{t.SEMICOLON}'),
 )
 
+Block = StatementType.Block()
+
+BlockStatements = (
+    Block.RegularBlock(r'{t.LBRACE}{s}{t.RBRACE}'),
+    Block.LoopBlock(r'{t.LBRACE}{t.RBRACE}'),
+)
+
 Control = StatementType.Control()
 
 ControlStatements = (
-    Control.If(r''),
-    Control.IfElse(r''),
-    Control.While(r''),
-    Control.For(r'')
+    Control.If(r'{t.IF}{t.LPAREN}{t.RPAREN}{s.RegularStatement}'),
+    Control.IfElse(r'{s.If}{t.ELSE}{s.RegularStatement}'),
+    Control.While(r'{t.WHILE}{t.LPAREN}{t.RPAREN}{s.RegularStatement}'),
+    Control.For(r'{t.FOR}{t.LPAREN}{t.RPAREN}{s.LoopStatement}'),
 )
 
 Statements = (
     StatementType.Empty(r'{t.SEMICOLON}'),
-    StatementType.Block(r'{t.LBRACE}{s}{t.RBRACE}'),
 
-    StatementType.FunctionArguments(
-        r'{t.DataType}{t.LITERAL}({t.COMMA}{s.FunctionArguments})?'),
-
-    StatementType.FunctionArgumentList(
-        r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
-    
-    StatementType.Function(
-        r'{t.FUNCTION}{t.DataType}{t.LITERAL}{t.FunctionArgumentList}{s.Block}'),
+    StatementType.FunctionFirstArgument(r'{t.DataType}{t.LITERAL}'),
+    StatementType.FunctionNextArgument(r'{t.COMMA}{s.FunctionFirstArgument}'),
+    StatementType.FunctionArguments(r'{t.FunctionFirstArgument}{s.FunctionNextArgument}+?'),
+    StatementType.FunctionArgumentList(r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
+    StatementType.Function(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{t.FunctionArguments}{s.Block}'),
 )
 
-Statements = JumpStatements + ControlStatements
+Statements = JumpStatements #JumpStatements + ControlStatements

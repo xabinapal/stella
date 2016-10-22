@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+__all__ = ['Singleton']
+
 class Singleton(type):
     def __call__(cls, *args, **kw):
         if not cls.instance:
