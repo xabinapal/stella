@@ -2,7 +2,7 @@
 
 from stella.core.patterns import Singleton
 
-__all__ = ['AutomatonError', 'AutomatonState', 'TransitionTable', 'EpsilonTransition']
+__all__ = ['AutomatonError', 'AutomatonState', 'TransitionTable', 'Epsilon']
 
 ################################################################################
 ### AutomatonError
@@ -22,10 +22,10 @@ class AutomatonState(object):
         self.accepting = accepting
 
 ################################################################################
-### EpsilonTransition
+### Epsilon
 ################################################################################
 
-class EpsilonTransition(metaclass=Singleton):
+class Epsilon(metaclass=Singleton):
     pass
 
 ################################################################################
@@ -51,7 +51,7 @@ class TransitionTable(object):
 
     def add(self, initial_state, final_state, symbol):
         if not self.non_deterministic and (
-                symbol == EpsilonTransition or (
+                symbol == Epsilon or (
                     initial_state in self.table and
                     symbol in self.table[initial_state])):
             raise AutomatonError()
@@ -65,7 +65,7 @@ class TransitionTable(object):
         self.table[initial_state][symbol].append(final_state)
 
     def get_transitions(self, state, symbol):
-        if not self.non_deterministic and symbol == EpsilonTransition:
+        if not self.non_deterministic and symbol == Epsilon:
             raise AutomatonError()
 
         if state.name not in self.table:

@@ -2,7 +2,7 @@
 
 from stella.core.interpreter.tokens import _TokenType
 from stella.core.interpreter.lexer import Tokenizer, Lexer
-from stella.core.automata import ENFA, EpsilonTransition
+from stella.core.automata import ENFA, Epsilon
 from stella.core.utils import CharStream
 
 import io
@@ -26,18 +26,19 @@ def _create_lexer(regex, token):
     return lexer
 
 def _symbol_checker(symbol_table, symbol):
-    if EpsilonTransition == symbol:
+    if symbol == Epsilon:
         return symbol_table[symbol] if symbol in symbol_table else []
 
-    table_match = next((x for x in symbol_table if symbol.ttype.is_of(x)), None)
-    return symbol_table[table_match]
+    matches = (x for x in symbol_table if x != Epsilon and symbol.ttype.is_of(x))
+    table_match = next(matches, None)
+    return symbol_table[table_match] if table_match else []
 
 def convert_to_enfa(regex, token):
     token = RegexToken.TOKEN(token)
     lexer = _create_lexer(regex, token)
     enfa = ENFA(symbol_checker=_symbol_checker)
     enfa.add_state(0, initial=True, accepting=False)
-    enfa.add_transition(0, 1, EpsilonTransition)
+    enfa.add_transition(0, 1, Epsilon)
 
     lparen_pos = None
     unions = []
@@ -49,21 +50,21 @@ def convert_to_enfa(regex, token):
         if x.ttype == token:
             enfa.add_transition(i, i + 1, x.value)
         elif x.ttype == _union:
-            enfa.add_transition(lparen_pos, i, EpsilonTransition)
+            enfa.add_transition(lparen_pos, i, Epsilon)
         else:
-            enfa.add_transition(i, i + 1, EpsilonTransition)
+            enfa.add_transition(i, i + 1, Epsilon)
 
             if x.ttype in _lparen:
                 lparen_pos = i
             
             elif x.ttype in _rparen:
                 while unions:
-                    enfa.add_transition(unions.pop(), i, EpsilonTransition)
+                    enfa.add_transition(unions.pop(), i, Epsilon)
                 lparen_pos = None
 
             elif x.ttype == _star:
-                enfa.add_transition(i, i - 1, EpsilonTransition)
-                enfa.add_transition(i - 1, i, EpsilonTransition)
+                enfa.add_transition(i, i - 1, Epsilon)
+                enfa.add_transition(i - 1, i, Epsilon)
 
     enfa.add_state(name=enfa.state_count, accepting=True)
 

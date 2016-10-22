@@ -41,12 +41,10 @@ class Parser(object):
                 x.input(token)
 
             valid_automata[:] = (x for x in valid_automata if x.valid_state())
-            validated_automata = True
+            validated_automata = all(x.accepting_state() for x in valid_automata)
 
         if not valid_automata:
             raise ParseError()
-
-        print(valid_automata)
 
         return valid_automata[0]
 

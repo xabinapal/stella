@@ -64,15 +64,19 @@ class ENFA(object):
 
         self.current_states = next_states
         self.input_symbols.append(symbol)
-        self._get_epsilon_transitions()
+        t = self._get_epsilon_transitions()
+        self.current_states.update(t)
 
     def valid_state(self):
         return self.current_states or not self.input_symbols
 
+    def accepting_state(self):
+        return any(x.accepting for x in self.current_states)
+
     def _get_epsilon_transitions(self):
         transitions = set()
         for x in self.current_states:
-            t = self.transitions.get_transitions(x, EpsilonTransition)
+            t = self.transitions.get_transitions(x, Epsilon)
             t = [x for x in self.states if x.name in t]
             if t:
                 transitions.update(t)

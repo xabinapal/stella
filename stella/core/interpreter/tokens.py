@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import collections
 import re
 
 __all__ = ['TokenType', 'Token']
@@ -31,8 +32,22 @@ class _TokenType(tuple):
         return self.compiled_expr.fullmatch(value) if self.expr else None
 
     def is_of(self, value):
-        #TODO
-        return True
+        parents = collections.deque(self)
+        while hasattr('parent', parents[0]):
+            parents.append(parents[0].parent)
+
+        tokenized_value = value[1:-1].split('.')
+        if tokenized_value[0] != 't':
+            return False
+
+        tokenized_value = collections.deque(tokenized_value[1:])
+        while parents and tokenized_value:
+            if tokenized_value[0] == parents[0]:
+                tokenized_value.popleft()
+
+            parents.popleft()
+
+        return not parents and not tokenized_value
 
 TokenType = _TokenType()
 
