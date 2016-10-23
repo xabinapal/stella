@@ -4,7 +4,7 @@ import io
 import collections
 
 from stella.core.utils import Rewinder
-from stella.core.interpreter.tokens import Token
+from stella.core.interpreter.productions import Token
 
 __all__ = ['LexError', 'Tokenizer', 'Lexer']
 

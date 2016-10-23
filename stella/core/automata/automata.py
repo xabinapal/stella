@@ -64,6 +64,12 @@ class TransitionTable(object):
 
         self.table[initial_state][symbol].append(final_state)
 
+    def get_state_transitions(self, state):
+        if state.name not in self.table:
+            return []
+
+        return self.table[state.name]
+
     def get_transitions(self, state, symbol):
         if not self.non_deterministic and symbol == Epsilon:
             raise AutomatonError()

@@ -73,6 +73,14 @@ class ENFA(object):
     def accepting_state(self):
         return any(x.accepting for x in self.current_states)
 
+    def current_transitions(self):
+        transitions = set()
+        for x in self.current_states:
+            t = self.transitions.get_state_transitions(x)
+            transitions.update(t)
+
+        return transitions
+        
     def _get_epsilon_transitions(self):
         transitions = set()
         for x in self.current_states:

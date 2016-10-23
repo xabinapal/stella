@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from stella.core.interpreter.tokens import _TokenType
+from stella.core.interpreter.productions import _TokenType
 from stella.core.interpreter.lexer import Tokenizer, Lexer
 from stella.core.automata import ENFA, Epsilon
 from stella.core.utils import CharStream

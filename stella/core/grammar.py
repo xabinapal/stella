@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from stella.core.interpreter.tokens import TokenType
-from stella.core.interpreter.statements import StatementType
+from stella.core.interpreter.productions import TokenType, StatementType
 
-__all__ = ['Tokens, Statements']
+__all__ = ['Tokens', 'Statements', 'ProgramStatement']
 
 ################################################################################
 ### Keywords
@@ -131,6 +130,16 @@ IgnoreTokens = (
 ### Statements
 ################################################################################
 
+Function = StatementType.Function()
+
+FunctionStatements = (
+    Function.FunctionFirstArgument(r'{t.DataType}{t.LITERAL}'),
+    Function.FunctionNextArgument(r'{t.COMMA}{s.FunctionFirstArgument}'),
+    Function.FunctionArguments(r'{s.FunctionFirstArgument}{s.FunctionNextArgument}+?'),
+    Function.FunctionArgumentList(r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
+    Function.Function(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{s.FunctionArguments}{s.Block}'),
+)
+
 Jump = StatementType.Jump()
 
 JumpStatements = (
@@ -141,27 +150,22 @@ JumpStatements = (
 Block = StatementType.Block()
 
 BlockStatements = (
-    Block.RegularBlock(r'{t.LBRACE}{s}{t.RBRACE}'),
-    Block.LoopBlock(r'{t.LBRACE}{t.RBRACE}'),
+    Block.RegularBlock(r'{t.LBRACE}({s.Statement}|{s.RegularBlock}){t.RBRACE}'),
+    Block.LoopBlock(r'{t.LBRACE}({s.Jump}|{s.Statement}|{s.RegularBlock}){t.RBRACE}'),
 )
 
 Control = StatementType.Control()
 
 ControlStatements = (
-    Control.If(r'{t.IF}{t.LPAREN}{t.RPAREN}{s.RegularStatement}'),
-    Control.IfElse(r'{s.If}{t.ELSE}{s.RegularStatement}'),
-    Control.While(r'{t.WHILE}{t.LPAREN}{t.RPAREN}{s.RegularStatement}'),
-    Control.For(r'{t.FOR}{t.LPAREN}{t.RPAREN}{s.LoopStatement}'),
+    Control.If(r'{t.IF}{t.LPAREN}{t.RPAREN}{s.RegularBlock}'),
+    Control.IfElse(r'{s.If}{t.ELSE}{s.RegularBlock}'),
+    Control.While(r'{t.WHILE}{t.LPAREN}{t.RPAREN}{s.RegularBlock}'),
+    Control.For(r'{t.FOR}{t.LPAREN}{t.RPAREN}{s.RegularBlock}'),
 )
 
 Statements = (
     StatementType.Empty(r'{t.SEMICOLON}'),
-
-    StatementType.FunctionFirstArgument(r'{t.DataType}{t.LITERAL}'),
-    StatementType.FunctionNextArgument(r'{t.COMMA}{s.FunctionFirstArgument}'),
-    StatementType.FunctionArguments(r'{t.FunctionFirstArgument}{s.FunctionNextArgument}+?'),
-    StatementType.FunctionArgumentList(r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
-    StatementType.Function(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{t.FunctionArguments}{s.Block}'),
 )
 
-Statements = JumpStatements #JumpStatements + ControlStatements
+Statements = FunctionStatements + JumpStatements #JumpStatements + ControlStatements
+ProgramStatement = StatementType.Program(r'{s}')
