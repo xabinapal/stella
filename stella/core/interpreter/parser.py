@@ -2,9 +2,8 @@
 
 from stella.core.utils import Rewinder
 from stella.core.interpreter.lexer import Tokenizer, Lexer, LexError
-from stella.core.automata import ENFA, convert_to_enfa
-
-import copy
+from stella.core.interpreter.productions import StatementType
+from stella.core.automata import ENFA, Epsilon
 
 __all__ = ['ParseError', 'Parser']
 
@@ -19,12 +18,11 @@ class ParseError(SyntaxError):
 ### Parser
 ################################################################################
 
-_st_re = r'\{(s|t)(\.[a-zA-Z_][a-zA-Z0-9_]+)*\}'
-
 class Parser(object):
-    def __init__(self, lexer, statements, ignore=[]):
+    def __init__(self, lexer, statement, automata, ignore=[]):
         self.lexer = Rewinder(lexer)
-        self.automata = [convert_to_enfa(x.expr, _st_re) for x in statements]
+        self.statement = statement
+        self.automata = automata
         self.ignore = ignore
         self.ignore_until = None
 
@@ -33,20 +31,23 @@ class Parser(object):
 
     def __next__(self):
         self.lexer.peek() # if no tokens left, raises an StopIteration
-        valid_automata = copy.deepcopy(self.automata)
-        validated_automata = False
-        while not validated_automata or len(valid_automata) > 1:
+        automaton = self.automata[self.statement]
+        automaton.reset()
+        
+        while automaton.valid_state() and not automaton.accepting_state():
             token = self._get_token()
-            for x in valid_automata:
-                x.input(token)
+            automaton.input(token)
 
-            valid_automata[:] = (x for x in valid_automata if x.valid_state())
-            validated_automata = all(x.accepting_state() for x in valid_automata)
+            for t in automaton.current_transitions():
+                if t != Epsilon:
+                    state = StatementType.parse_str_repr(t[1:-1])
+                    if state:
+                        Parser(self.lexer, state, self.automata, self.ignore)
 
-        if not valid_automata:
+        if not automaton.valid_state():
             raise ParseError()
 
-        return valid_automata[0]
+        return automaton
 
     def _get_token(self):
         ignore_token = True

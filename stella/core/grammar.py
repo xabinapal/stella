@@ -130,6 +130,8 @@ IgnoreTokens = (
 ### Statements
 ################################################################################
 
+ProgramStatement = StatementType.Program(r'{s.FunctionDeclaration}*')
+
 Function = StatementType.Function()
 
 FunctionStatements = (
@@ -137,7 +139,7 @@ FunctionStatements = (
     Function.FunctionNextArgument(r'{t.COMMA}{s.FunctionFirstArgument}'),
     Function.FunctionArguments(r'{s.FunctionFirstArgument}{s.FunctionNextArgument}+?'),
     Function.FunctionArgumentList(r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
-    Function.Function(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{s.FunctionArguments}{s.Block}'),
+    Function.FunctionDeclaration(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{s.FunctionArguments}{s.Block}'),
 )
 
 Jump = StatementType.Jump()
@@ -167,5 +169,4 @@ Statements = (
     StatementType.Empty(r'{t.SEMICOLON}'),
 )
 
-Statements = FunctionStatements + JumpStatements #JumpStatements + ControlStatements
-ProgramStatement = StatementType.Program(r'{s}')
+Statements = (ProgramStatement,) + FunctionStatements + JumpStatements #JumpStatements + ControlStatements

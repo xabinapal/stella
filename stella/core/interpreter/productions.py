@@ -10,11 +10,14 @@ __all__ = ['TokenType', 'Token', 'StatementType', 'Statement']
 
 class _ProductionType(tuple):
     def __init__(self, *args, **kwargs):
-        self.items = []
+        self.items = [self]
 
     @staticmethod
     def _init_member(member):
         pass
+
+    def __contains__(self, item):
+        return item in self.items
 
     def __getattr__(self, name):
         def production_type(expr=None):
@@ -37,6 +40,39 @@ class _ProductionType(tuple):
     def __repr__(self):
         return '<' + self.__class__.__name__ + '> ' + '.'.join(self)
 
+    def is_str_repr(self, value):
+        if not isinstance(value, str):
+            return False
+            
+        parents = [x for x in self]
+        parents.reverse()
+        
+        tokenized_value = value.split('.')
+        tokenized_value.reverse()
+        
+        while parents and tokenized_value:
+            if parents.pop() == tokenized_value[-1]:
+                tokenized_value.pop()
+
+        return not tokenized_value
+
+    def parse_str_repr(self, value):
+        if not isinstance(value, str):
+            return None
+
+        value = value.split('.')
+        for x in self.items:
+            item = [y for y in x]
+            tokenized_value = value[:]
+            while item and tokenized_value:
+                if item.pop() == tokenized_value[-1]:
+                    tokenized_value.pop()
+
+            if not tokenized_value:
+                return x
+
+        return None
+
 ################################################################################
 ### TokenType
 ################################################################################
@@ -48,22 +84,6 @@ class _TokenType(_ProductionType):
 
     def match(self, value):
         return self.compiled_expr.fullmatch(value) if self.expr else None
-
-    def is_of(self, value):
-        if not isinstance(value, str):
-            return False
-            
-        parents = [x for x in self]
-        parents.reverse()
-        
-        tokenized_value = value[1:-1].split('.')
-        tokenized_value.reverse()
-        
-        while parents and tokenized_value:
-            if parents.pop() == tokenized_value[-1]:
-                tokenized_value.pop()
-
-        return not tokenized_value
 
 TokenType = _TokenType('t')
 
@@ -90,14 +110,6 @@ class Token(object):
 ################################################################################
 
 class _StatementType(_ProductionType):
-    def __repr__(self):
-        return 'StatementType' + ('.' if self else '') + '.'.join(self)
-
-    @staticmethod
-    def is_statement(value):
-        if not isinstance(value, str):
-            return False
-
-        return value[1:-1].split('.')[0] == 's'
+    pass
 
 StatementType = _StatementType('s')
