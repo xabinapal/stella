@@ -26,29 +26,42 @@ class Parser(object):
         self.ignore = ignore
         self.ignore_until = None
 
-    def __iter__(self):
-        return Rewinder(self)
-
-    def __next__(self):
-        self.lexer.peek() # if no tokens left, raises an StopIteration
+    def get_ast(self):
         automaton = self.automata[self.statement]
         automaton.reset()
 
+        inputs = []
+        print(self.statement)
         while automaton.valid_state() and not automaton.accepting_state():
+            is_statement = False
+
             for t in automaton.current_transitions():
                 state = StatementType.parse_str_repr(t)
                 if state:
-                    print('tenemos staemnt')
-                    Parser(self.lexer, state, self.automata, self.ignore)
+                    self.lexer.commit()
+                    p = Parser(self.lexer, state, self.automata, self.ignore)
+                    try:
+                        sub_ast = p.get_ast()
+                        inputs.append(sub_ast)
+                        automaton.input(t)
+                        is_statement = True
+                        self.lexer.commit()
+                        break
+                    except ParseError:
+                        self.lexer.rewind()
+                        pass
 
-            token = self._get_token()
-            automaton.input(token)
+            if not is_statement:
+                self.lexer.commit()
+                token = self._get_token()
+                print(token)
+                inputs.append(token)
+                automaton.input(token)
 
         if not automaton.valid_state():
             raise ParseError()
 
-#        return automaton
-        raise StopIteration()
+        return inputs
 
     def _get_token(self):
         ignore_token = True

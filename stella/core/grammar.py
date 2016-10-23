@@ -13,7 +13,6 @@ FlowControl = Keyword.FlowControl()
 DataType = Keyword.DataType()
 
 FlowControlKeywords = (
-    FlowControl.FUNCTION(r'function'),
     FlowControl.IF(r'if'),
     FlowControl.ELSE(r'else'),
     FlowControl.WHILE(r'while'),
@@ -135,18 +134,11 @@ ProgramStatement = StatementType.Program(r'{s.FunctionDeclaration}({s.Program}|)
 Function = StatementType.Function()
 
 FunctionStatements = (
-    Function.FunctionFirstArgument(r'{t.DataType}{t.LITERAL}'),
-    Function.FunctionNextArgument(r'{t.COMMA}{s.FunctionFirstArgument}'),
-    Function.FunctionArguments(r'{s.FunctionFirstArgument}({s.FunctionNextArgument}|)*'),
+    Function.FunctionArgument(r'{t.DataType}{t.LITERAL}'),
+    Function.FunctionNextArgument(r'{t.COMMA}{s.FunctionArgument}'),
+    Function.FunctionArguments(r'{s.FunctionArgument}{s.FunctionNextArgument}*'),
     Function.FunctionArgumentList(r'{t.LPAREN}({s.FunctionArguments}|){t.RPAREN}'),
-    Function.FunctionDeclaration(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{s.FunctionArguments}{s.Block}'),
-)
-
-Jump = StatementType.Jump()
-
-JumpStatements = (
-    Jump.Break(r'{t.BREAK}{t.SEMICOLON}'),
-    Jump.Continue(r'{t.CONTINUE}{t.SEMICOLON}'),
+    Function.FunctionDeclaration(r'{t.DataType}{t.LITERAL}{s.FunctionArgumentList}{s.RegularBlock}'),
 )
 
 Block = StatementType.Block()
@@ -156,6 +148,13 @@ BlockStatements = (
     Block.LoopBlock(r'{t.LBRACE}({s.Jump}|{s.Statement}|{s.RegularBlock})*{t.RBRACE}'),
 )
 
+
+Jump = StatementType.Jump()
+
+JumpStatements = (
+    Jump.Break(r'{t.BREAK}{t.SEMICOLON}'),
+    Jump.Continue(r'{t.CONTINUE}{t.SEMICOLON}'),
+)
 Control = StatementType.Control()
 
 ControlStatements = (
@@ -169,4 +168,4 @@ Statements = (
     StatementType.Empty(r'{t.SEMICOLON}'),
 )
 
-Statements = (ProgramStatement,) + FunctionStatements + JumpStatements #JumpStatements + ControlStatements
+Statements = (ProgramStatement,) + FunctionStatements + BlockStatements + JumpStatements #JumpStatements + ControlStatements
