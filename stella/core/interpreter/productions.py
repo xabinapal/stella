@@ -10,6 +10,10 @@ __all__ = ['TokenType', 'Token', 'StatementType', 'Statement']
 
 class _ProductionType(tuple):
     def __init__(self, *args, **kwargs):
+        self.name = None
+        self.expr = None
+        self.parent = None
+
         self.items = [self]
 
     @staticmethod
@@ -20,6 +24,18 @@ class _ProductionType(tuple):
         return item in self.items
 
     def __getattr__(self, name):
+        existing = next((x for x in self.items if x.name == name), None)
+        if existing:
+            self.items.remove(existing)
+            existing.parent = None
+
+        parent = self.parent
+        while parent.__class__ == self.__class__:
+            if next((x for x in parent.items if x.name == name), None):
+                raise KeyError(name)
+
+            parent = parent.parent
+
         def production_type(expr=None):
             new = self.__class__(self + (name,))
             new.name = name
@@ -43,11 +59,14 @@ class _ProductionType(tuple):
     def is_str_repr(self, value):
         if not isinstance(value, str):
             return False
+
+        if value[0] != '{' or value[-1] != '}':
+            return False
             
         parents = [x for x in self]
         parents.reverse()
         
-        tokenized_value = value.split('.')
+        tokenized_value = value[1:-1].split('.')
         tokenized_value.reverse()
         
         while parents and tokenized_value:
@@ -60,7 +79,10 @@ class _ProductionType(tuple):
         if not isinstance(value, str):
             return None
 
-        value = value.split('.')
+        if value[0] != '{' or value[-1] != '}':
+            return False
+
+        value = value[1:-1].split('.')
         for x in self.items:
             item = [y for y in x]
             tokenized_value = value[:]

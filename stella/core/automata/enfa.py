@@ -23,8 +23,9 @@ class ENFA(object):
         self.reset()
         
     def add_state(self, name, initial=False, accepting=False):
-        if initial and next((x for x in self.states if x.initial), None):
-            raise AutomatonError()
+        if initial:
+            if next((x for x in self.states if x.initial), None):
+                raise AutomatonError()
 
         state = AutomatonState(name, initial, accepting)
         self.states.append(state)
@@ -37,23 +38,27 @@ class ENFA(object):
     def add_transition(self, initial_state, final_state, value):
         self.transitions.add(initial_state, final_state, value)
 
+    def compile(self):
+        count = 0
+        if not self.initial_state:
+            return
+
+        self.current_states.add(self.initial_state)
+        while count != len(self.current_states):
+            count = len(self.current_states)
+            t = self._get_epsilon_transitions()
+            self.current_states.update(t)
+
     def reset(self):
         self.initial_state = next((x for x in self.states if x.initial), None)
         self.state_count = len(self.states)
         self.current_states = set()
         self.input_symbols = []
+        self.compile()
 
     def input(self, symbol):
-        if not self.current_states:
-            if self.input_symbols:
-                return
-
-            count = 0
-            self.current_states.add(self.initial_state)
-            while count != len(self.current_states):
-                count = len(self.current_states)
-                t = self._get_epsilon_transitions()
-                self.current_states.update(t)
+        if not self.current_states and self.input_symbols:
+            return
 
         next_states = set()
         for x in self.current_states:
@@ -68,7 +73,7 @@ class ENFA(object):
         self.current_states.update(t)
 
     def valid_state(self):
-        return self.current_states or not self.input_symbols
+        return len(self.current_states) != 0
 
     def accepting_state(self):
         return any(x.accepting for x in self.current_states)

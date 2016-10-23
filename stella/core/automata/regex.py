@@ -29,9 +29,10 @@ def _symbol_checker(symbol_table, symbol):
     if symbol == Epsilon:
         return symbol_table[symbol] if symbol in symbol_table else []
 
-    matches = (x for x in symbol_table if x != Epsilon and symbol.ttype.is_of(x))
-    table_match = next(matches, None)
-    return symbol_table[table_match] if table_match else []
+    match = (x for x in symbol_table if symbol.ttype.is_str_repr(x))
+    match = next(match, None)
+
+    return symbol_table[match] if match else []
 
 def convert_to_enfa(regex, token):
     token = RegexToken.TOKEN(token)
@@ -67,5 +68,6 @@ def convert_to_enfa(regex, token):
                 enfa.add_transition(i - 1, i, Epsilon)
 
     enfa.add_state(name=enfa.state_count, accepting=True)
+    enfa.compile()
 
     return enfa

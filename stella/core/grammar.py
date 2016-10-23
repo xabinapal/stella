@@ -58,11 +58,11 @@ IntegerConstant = Constant.IntegerConstant()
 FloatingConstant = Constant.FloatingConstant()
 
 Constants = (
-    IntegerConstant.DECIMAL(r'(0|[1-9][0-9]*)'),
-    IntegerConstant.HEXADECIMAL(r'0x[a-fA-F0-9]*'),
-    IntegerConstant.OCTAL(r'0[0-7]+'),
-    IntegerConstant.BINARY(r'0b[0-1]*'),
-    FloatingConstant.DECIMAL(r'([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)'),
+    IntegerConstant.INTEGER_DECIMAL(r'(0|[1-9][0-9]*)'),
+    IntegerConstant.INTEGER_HEXADECIMAL(r'0x[a-fA-F0-9]*'),
+    IntegerConstant.INTEGER_OCTAL(r'0[0-7]+'),
+    IntegerConstant.INTEGER_BINARY(r'0b[0-1]*'),
+    FloatingConstant.FLOATING_DECIMAL(r'([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)'),
 )
 
 ################################################################################
@@ -130,15 +130,15 @@ IgnoreTokens = (
 ### Statements
 ################################################################################
 
-ProgramStatement = StatementType.Program(r'{s.FunctionDeclaration}*')
+ProgramStatement = StatementType.Program(r'{s.FunctionDeclaration}({s.Program}|)')
 
 Function = StatementType.Function()
 
 FunctionStatements = (
     Function.FunctionFirstArgument(r'{t.DataType}{t.LITERAL}'),
     Function.FunctionNextArgument(r'{t.COMMA}{s.FunctionFirstArgument}'),
-    Function.FunctionArguments(r'{s.FunctionFirstArgument}{s.FunctionNextArgument}+?'),
-    Function.FunctionArgumentList(r'{t.LPAREN}{s.FunctionArguments}?{t.RPAREN}'),
+    Function.FunctionArguments(r'{s.FunctionFirstArgument}({s.FunctionNextArgument}|)*'),
+    Function.FunctionArgumentList(r'{t.LPAREN}({s.FunctionArguments}|){t.RPAREN}'),
     Function.FunctionDeclaration(r'{t.FUNCTION}{t.DataType}{t.LITERAL}{s.FunctionArguments}{s.Block}'),
 )
 
@@ -152,8 +152,8 @@ JumpStatements = (
 Block = StatementType.Block()
 
 BlockStatements = (
-    Block.RegularBlock(r'{t.LBRACE}({s.Statement}|{s.RegularBlock}){t.RBRACE}'),
-    Block.LoopBlock(r'{t.LBRACE}({s.Jump}|{s.Statement}|{s.RegularBlock}){t.RBRACE}'),
+    Block.RegularBlock(r'{t.LBRACE}({s.Statement}|{s.RegularBlock})*{t.RBRACE}'),
+    Block.LoopBlock(r'{t.LBRACE}({s.Jump}|{s.Statement}|{s.RegularBlock})*{t.RBRACE}'),
 )
 
 Control = StatementType.Control()

@@ -33,21 +33,22 @@ class Parser(object):
         self.lexer.peek() # if no tokens left, raises an StopIteration
         automaton = self.automata[self.statement]
         automaton.reset()
-        
+
         while automaton.valid_state() and not automaton.accepting_state():
+            for t in automaton.current_transitions():
+                state = StatementType.parse_str_repr(t)
+                if state:
+                    print('tenemos staemnt')
+                    Parser(self.lexer, state, self.automata, self.ignore)
+
             token = self._get_token()
             automaton.input(token)
-
-            for t in automaton.current_transitions():
-                if t != Epsilon:
-                    state = StatementType.parse_str_repr(t[1:-1])
-                    if state:
-                        Parser(self.lexer, state, self.automata, self.ignore)
 
         if not automaton.valid_state():
             raise ParseError()
 
-        return automaton
+#        return automaton
+        raise StopIteration()
 
     def _get_token(self):
         ignore_token = True
