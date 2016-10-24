@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from stella.core.utils import CharStream, Rewinder
+from stella.core.utils import CharStream, RewindableIterator
 
 import io
 import unittest
@@ -42,62 +42,62 @@ class CharStreamTest(unittest.TestCase):
         stream = io.StringIO('⬆World⬇')
         self._test_charstream(stream, '⬆World⬇')
 
-class RewinderTest(unittest.TestCase):
-    def _get_rewinder(self):
+class RewindableIteratorTest(unittest.TestCase):
+    def _get_rewindable_iterator(self):
         stream = io.StringIO('Hello World')
         charstream = CharStream(stream)
-        rewinder = Rewinder(charstream)
-        return rewinder
+        rewindable_iterator = RewindableIterator(charstream)
+        return rewindable_iterator
 
-    def _test_rewinder(self, rewinder, value):
-        fullread = ''.join(x for x in rewinder)
+    def _test_rewindable_iterator(self, rewindable_iterator, value):
+        fullread = ''.join(x for x in rewindable_iterator)
         self.assertEqual(fullread, value)
         with self.assertRaises(StopIteration):
-            next(rewinder)
+            next(rewindable_iterator)
 
-    def _test_length_rewinder(self, rewinder, value):
-        fullread = ''.join(next(rewinder) for _ in range(len(value)))
+    def _test_length_rewindable_iterator(self, rewindable_iterator, value):
+        fullread = ''.join(next(rewindable_iterator) for _ in range(len(value)))
         self.assertEqual(fullread, value)
 
-    def _test_peek_rewinder(self, rewinder):
-        peek = rewinder.peek()
-        for x in rewinder:
+    def _test_peek_rewindable_iterator(self, rewindable_iterator):
+        peek = rewindable_iterator.peek()
+        for x in rewindable_iterator:
             self.assertEqual(peek, x)
             try:
-                peek = rewinder.peek()
+                peek = rewindable_iterator.peek()
             except:
                 with self.assertRaises(StopIteration):
-                    next(rewinder)
+                    next(rewindable_iterator)
 
-    def test_fullread(self):
-        rewinder = self._get_rewinder()
-        self._test_rewinder(rewinder, 'Hello World')
+    def test_full_read(self):
+        rewindable_iterator = self._get_rewindable_iterator()
+        self._test_rewindable_iterator(rewindable_iterator, 'Hello World')
 
-    def test_fullrewind(self):
-        rewinder = self._get_rewinder()
-        self._test_rewinder(rewinder, 'Hello World')
-        rewinder.rewind()
-        self._test_rewinder(rewinder, 'Hello World')
+    def test_full_rewind(self):
+        rewindable_iterator = self._get_rewindable_iterator()
+        self._test_rewindable_iterator(rewindable_iterator, 'Hello World')
+        rewindable_iterator.rewind()
+        self._test_rewindable_iterator(rewindable_iterator, 'Hello World')
 
-    def test_halfrewind(self):
-        rewinder = self._get_rewinder()
-        self._test_length_rewinder(rewinder, 'Hello ')
-        rewinder.rewind()
-        self._test_rewinder(rewinder, 'Hello World')
+    def test_half_rewind(self):
+        rewindable_iterator = self._get_rewindable_iterator()
+        self._test_length_rewindable_iterator(rewindable_iterator, 'Hello ')
+        rewindable_iterator.rewind()
+        self._test_rewindable_iterator(rewindable_iterator, 'Hello World')
 
-    def test_halfcommit(self):
-        rewinder = self._get_rewinder()
-        self._test_length_rewinder(rewinder, 'Hello ')
-        rewinder.commit()
-        rewinder.rewind()
-        self._test_rewinder(rewinder, 'World')
+    def test_half_commit(self):
+        rewindable_iterator = self._get_rewindable_iterator()
+        self._test_length_rewindable_iterator(rewindable_iterator, 'Hello ')
+        rewindable_iterator.commit()
+        rewindable_iterator.rewind()
+        self._test_rewindable_iterator(rewindable_iterator, 'World')
 
     def test_peek(self):
-        rewinder = self._get_rewinder()
-        self._test_peek_rewinder(rewinder)
+        rewindable_iterator = self._get_rewindable_iterator()
+        self._test_peek_rewindable_iterator(rewindable_iterator)
 
-    def test_peekrewind(self):
-        rewinder = self._get_rewinder()
-        self._test_peek_rewinder(rewinder)
-        rewinder.rewind()
-        self._test_peek_rewinder(rewinder)
+    def test_peek_rewind(self):
+        rewindable_iterator = self._get_rewindable_iterator()
+        self._test_peek_rewindable_iterator(rewindable_iterator)
+        rewindable_iterator.rewind()
+        self._test_peek_rewindable_iterator(rewindable_iterator)

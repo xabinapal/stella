@@ -29,14 +29,14 @@ class LexerTest(unittest.TestCase):
         stream = io.StringIO(';'.join((x.expr for x in Keywords)))
         char_stream = CharStream(stream)
         lexer = Lexer(char_stream, self.__class__.tokenizer)
-        result = (x.ttype for x in lexer if not repr(x.ttype).endswith('SEMICOLON'))
+        result = (x.ttype for x in lexer if not x.ttype.name == 'SEMICOLON')
         self.assertEqual([repr(x) for x in Keywords], [repr(x) for x in result])
 
     def test_simple_script(self):
         lexer = Lexer(_simple_script, self.__class__.tokenizer)
 
-        result = [x.value for x in lexer if not repr(x.ttype).endswith('WSPACE')
-            and not repr(x.ttype).endswith('NLINE')]
+        result = [x.value for x in lexer if not x.ttype.name == 'WSPACE'
+            and not x.ttype.name == 'NLINE']
         self.assertEqual(''.join(result), 'while(i--){if(i%3==1){j++;}}')
 
 class ParserTest(unittest.TestCase):
