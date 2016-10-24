@@ -101,3 +101,18 @@ class RewindableIteratorTest(unittest.TestCase):
         self._test_peek_rewindable_iterator(rewindable_iterator)
         rewindable_iterator.rewind()
         self._test_peek_rewindable_iterator(rewindable_iterator)
+
+    def test_clone(self):
+        rewindable_iterator = self._get_rewindable_iterator()
+        self._test_length_rewindable_iterator(rewindable_iterator, 'Hello ')
+        cloned_iterator = rewindable_iterator.clone()
+        cloned_iterator.commit()
+        self._test_rewindable_iterator(rewindable_iterator, 'World')
+        self._test_rewindable_iterator(cloned_iterator, 'World')
+        rewindable_iterator.rewind()
+        self._test_rewindable_iterator(rewindable_iterator, 'Hello World')
+        cloned_iterator.rewind()
+        self._test_rewindable_iterator(cloned_iterator, 'World')
+        rewindable_iterator.commit()
+        cloned_iterator.rewind()
+        self._test_rewindable_iterator(cloned_iterator, 'World')

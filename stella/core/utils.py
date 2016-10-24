@@ -54,17 +54,20 @@ class RewindableIteratorBase(metaclass=abc.ABCMeta):
         self.iterator = iterator
         self.buffer = []
         self.buf_pos = {}
+        self.commit_pos = {}
         self.next_instance_id = 0
 
     def _create_instance(self):
         instance_id = self.next_instance_id
         self.next_instance_id += 1
         self.buf_pos[instance_id] = 0
+        self.commit_pos[instance_id] = 0
         return instance_id
 
     def _clone_instance(self, instance_id):
         new_instance_id = self._create_instance()
         self.buf_pos[new_instance_id] = self.buf_pos[instance_id]
+        self.commit_pos[new_instance_id] = self.commit_pos[instance_id]
         return new_instance_id
 
     def _next(self, instance_id):
@@ -82,16 +85,21 @@ class RewindableIteratorBase(metaclass=abc.ABCMeta):
         return n
 
     def _rewind(self, instance_id):
-        self.buf_pos[instance_id] = 0
+        self.buf_pos[instance_id] = self.commit_pos[instance_id]
 
     def _commit(self, instance_id):
-        min_pos = self.buf_pos[instance_id]
-        for x in self.buf_pos.values():
+        self.commit_pos[instance_id] = self.buf_pos[instance_id]
+
+        min_pos = self.commit_pos[instance_id]
+        for x in self.commit_pos.values():
             if min_pos > x:
                 min_pos = x
 
         for x in self.buf_pos:
             self.buf_pos[x] -= min_pos
+
+        for x in self.commit_pos:
+            self.commit_pos[x] -= min_pos
 
         del self.buffer[:min_pos]
 

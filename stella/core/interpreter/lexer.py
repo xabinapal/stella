@@ -3,7 +3,7 @@
 import io
 import collections
 
-from stella.core.utils import Rewinder
+from stella.core.utils import RewindableIterator
 from stella.core.interpreter.productions import Token
 
 __all__ = ['LexError', 'Tokenizer', 'Lexer']
@@ -33,11 +33,11 @@ class Tokenizer(object):
 class Lexer(object):
     def __init__(self, stream, tokenizer):
         iterator = iter(stream)
-        self.iterator = Rewinder(iterator)
+        self.iterator = RewindableIterator(iterator)
         self.tokenizer = tokenizer
 
     def __iter__(self):
-        return Rewinder(self)
+        return RewindableIterator(self)
 
     def __next__(self):
         token = None
