@@ -26,7 +26,7 @@ def _create_lexer(regex, token):
     return lexer
 
 def _symbol_checker(symbol_table, symbol):
-    if symbol == Epsilon:
+    if symbol == Epsilon or isinstance(symbol, str):
         return symbol_table[symbol] if symbol in symbol_table else []
 
     match = (x for x in symbol_table if symbol.ttype.is_str_repr(x))
@@ -51,6 +51,7 @@ def convert_to_enfa(regex, token):
         if x.ttype == token:
             enfa.add_transition(i, i + 1, x.value)
         elif x.ttype == _union:
+            unions.append(i)
             enfa.add_transition(lparen_pos, i, Epsilon)
         else:
             enfa.add_transition(i, i + 1, Epsilon)

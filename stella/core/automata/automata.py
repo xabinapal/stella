@@ -62,11 +62,12 @@ class TransitionTable(object):
         if symbol not in self.table[initial_state]:
             self.table[initial_state][symbol] = []
 
-        self.table[initial_state][symbol].append(final_state)
+        if final_state not in self.table[initial_state][symbol]:
+            self.table[initial_state][symbol].append(final_state)
 
     def get_state_transitions(self, state):
         if state.name not in self.table:
-            return []
+            return {}
 
         return self.table[state.name]
 

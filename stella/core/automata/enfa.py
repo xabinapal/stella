@@ -2,6 +2,8 @@
 
 from stella.core.automata import *
 
+import itertools
+
 __all__ = ['ENFA']
 
 class ENFA(object):
@@ -46,7 +48,7 @@ class ENFA(object):
         self.current_states.add(self.initial_state)
         while count != len(self.current_states):
             count = len(self.current_states)
-            t = self._get_epsilon_transitions()
+            t = self._get_epsilon_transitions(self.current_states)
             self.current_states.update(t)
 
     def reset(self):
@@ -57,28 +59,42 @@ class ENFA(object):
         self.compile()
 
     def input(self, symbol):
-        if not self.current_states and self.input_symbols:
-            return
-
-        next_states = set()
-        for x in self.current_states:
-            t = self.transitions.get_transitions(x, symbol)
-            t = [x for x in self.states if x.name in t]
-            if t:
-                next_states.update(t)
-
+        next_states = self.get_next_states(symbol)
         self.current_states = next_states
         self.input_symbols.append(symbol)
-        t = self._get_epsilon_transitions()
-        self.current_states.update(t)
 
+    def get_next_states(self, symbol):
+        next_states = set()
+        if self.current_states:
+            for x in self.current_states:
+                t = self.transitions.get_transitions(x, symbol)
+                t = [x for x in self.states if x.name in t]
+                next_states.update(t)
+
+            t = self._get_epsilon_transitions(next_states)
+            next_states.update(t)
+
+        next_states.update(self._get_epsilon_transitions(next_states))
+
+        return next_states
+
+    def next_is_valid_state(self, symbol):
+        next_states = self.get_next_states(symbol)
+        return len(next_states) != 0
+
+    @property
     def valid_state(self):
         return len(self.current_states) != 0
 
+    @property
     def accepting_state(self):
         return any(x.accepting for x in self.current_states)
 
+    @property
     def current_transitions(self):
+        states = set(self.current_states)
+        states.update(self._get_epsilon_transitions(states))
+
         transitions = set()
         for x in self.current_states:
             t = self.transitions.get_state_transitions(x)
@@ -86,12 +102,16 @@ class ENFA(object):
 
         return transitions
         
-    def _get_epsilon_transitions(self):
-        transitions = set()
-        for x in self.current_states:
-            t = self.transitions.get_transitions(x, Epsilon)
-            t = [x for x in self.states if x.name in t]
-            if t:
-                transitions.update(t)
+    def _get_epsilon_transitions(self, states):
+        t = (self.transitions.get_transitions(x, Epsilon) for x in states)
+        t = set(itertools.chain.from_iterable(t))
+        transitions = set(x for x in self.states if x.name in t)
+
+        count = 0
+        while count != len(transitions):
+            count = len(transitions)
+            t = (self.transitions.get_transitions(x, Epsilon) for x in transitions)
+            t = set(itertools.chain.from_iterable(t))
+            transitions.update(x for x in self.states if x.name in t)
 
         return transitions
