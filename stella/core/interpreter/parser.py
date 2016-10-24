@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from stella.core.utils import Rewinder
+from stella.core.utils import RewindableIterator
 from stella.core.interpreter.lexer import Tokenizer, Lexer, LexError
 from stella.core.interpreter.productions import StatementType
 from stella.core.automata import ENFA, Epsilon
@@ -20,7 +20,11 @@ class ParseError(SyntaxError):
 
 class Parser(object):
     def __init__(self, lexer, statement, automata, ignore=[]):
-        self.lexer = Rewinder(lexer)
+        if isinstance(lexer, RewindableIterator):
+            self.lexer = lexer.clone()
+        else:
+            self.lexer = RewindableIterator(lexer)
+
         self.statement = statement
         self.automata = automata
         self.ignore = ignore
@@ -31,37 +35,49 @@ class Parser(object):
         automaton.reset()
 
         inputs = []
+        last_was_accepting = False
         print(self.statement)
-        while automaton.valid_state() and not automaton.accepting_state():
-            is_statement = False
+        while automaton.valid_state:
+            if not [x for x in automaton.current_transitions if x != Epsilon]:
+                break
 
-            for t in automaton.current_transitions():
-                state = StatementType.parse_str_repr(t)
-                if state:
-                    self.lexer.commit()
-                    p = Parser(self.lexer, state, self.automata, self.ignore)
-                    try:
-                        sub_ast = p.get_ast()
-                        inputs.append(sub_ast)
-                        automaton.input(t)
-                        is_statement = True
-                        self.lexer.commit()
-                        break
-                    except ParseError:
-                        self.lexer.rewind()
-                        pass
-
-            if not is_statement:
+            last_was_accepting = automaton.accepting_state
+            next_input = self._get_next_input(automaton)
+            if automaton.valid_state:
+                inputs.append(next_input)
                 self.lexer.commit()
-                token = self._get_token()
-                print(token)
-                inputs.append(token)
-                automaton.input(token)
 
-        if not automaton.valid_state():
+        self.lexer.rewind()
+        if not automaton.valid_state and not last_was_accepting:
             raise ParseError()
 
-        return inputs
+        return self._create_ast(inputs)
+
+    def _get_next_input(self, automaton):
+        self.lexer.commit()
+        next_input = None
+        is_statement = False
+
+        for t in automaton.current_transitions:
+            state = StatementType.parse_str_repr(t)
+            if state:
+                p = Parser(self.lexer, state, self.automata, self.ignore)
+                try:
+                    next_input = p.get_ast()
+                    automaton.input(t)
+                    is_statement = True
+                    self.lexer = p.lexer
+                    break;
+                except ParseError:
+                    pass
+
+        if not is_statement:
+            next_input = self._get_token()
+            automaton.input(next_input)
+            if automaton.valid_state:
+                print(next_input)
+
+        return next_input
 
     def _get_token(self):
         ignore_token = True
@@ -71,7 +87,7 @@ class Parser(object):
                 ignore_token = self._ignored_token(token)
             except StopIteration as e:
                 if self.ignore_until:
-                    raise ParseError()
+                    raise ParseError('Expecting ' + str(self.ignore_until.ttype) + ', found <EOF>')
 
                 raise e
 
@@ -94,3 +110,6 @@ class Parser(object):
             return True
 
         return False
+
+    def _create_ast(self, inputs):
+        return inputs
