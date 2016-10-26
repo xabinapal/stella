@@ -6,14 +6,7 @@ import collections
 from stella.core.utils import RewindableIterator
 from stella.core.interpreter.productions import Token
 
-__all__ = ['LexError', 'Tokenizer', 'Lexer']
-
-################################################################################
-### LexError
-################################################################################
-
-class LexError(SyntaxError):
-    pass
+__all__ = ['Tokenizer', 'Lexer']
 
 ################################################################################
 ### Tokenizer

@@ -69,48 +69,56 @@ Constants = (
 ################################################################################
 
 Punctuator = TokenType.Punctuator()
+Operator = Punctuator.Operator()
+UnaryOperator = Operator.UnaryOperator(has_unary_bp=True)
+InfixOperator = Operator.InfixOperator(has_infix_bp=True)
+UnaryOrInfixOperator = Operator.UnaryOrInfixOperator(has_unary_bp=True, has_infix_bp=True)
 
 Punctuators = (
-    Punctuator.LBRACK(r'\['),
-    Punctuator.RBRACK(r'\]'),
-    Punctuator.LPAREN(r'\('),
-    Punctuator.RPAREN(r'\)'),
-    Punctuator.LBRACE(r'\{'),
-    Punctuator.RBRACE(r'\}'),
-
     Punctuator.DOT(r'\.'),
     Punctuator.COMMA(r','),
     Punctuator.SEMICOLON(r';'),
     Punctuator.EQUAL(r'='),
 
-    Punctuator.INC(r'\+'),
-    Punctuator.DEC(r'-'),
-    Punctuator.MUL(r'\*'),
-    Punctuator.DIV(r'/'),
-    Punctuator.MOD(r'%'),
+    Punctuator.LBRACE(r'\{'),
+    Punctuator.RBRACE(r'\}'),
 
-    Punctuator.LSHIFT(r'<<'),
-    Punctuator.RSHIFT(r'>>'),
-    Punctuator.LROT(r'<<<'),
-    Punctuator.RROT(r'>>>'),
+    Punctuator.LBRACK(r'\[', infix_bp=400),
+    Punctuator.RBRACK(r'\]', infix_bp=400),
+    Punctuator.LPAREN(r'\(', infix_bp=300),
+    Punctuator.RPAREN(r'\)', infix_bp=300),
 
-    Punctuator.AND(r'&'),
-    Punctuator.OR(r'\|'),
-    Punctuator.XOR(r'\^'),
-    Punctuator.NOT(r'~'),
+    UnaryOperator.INC_OP(r'\+\+', unary_bp=200),
+    UnaryOperator.DEC_OP(r'--', unary_bp=200),
+    UnaryOperator.BITWISE_NOT(r'~', unary_bp=100),
+    UnaryOperator.LOGICAL_NOT(r'!', unary_bp=100),
 
-    Punctuator.INC_OP(r'\+\+'),
-    Punctuator.DEC_OP(r'--'),
-    Punctuator.AND_OP(r'&&'),
-    Punctuator.OR_OP(r'\|\|'),
-    Punctuator.NOT_OP(r'!'),
+    InfixOperator.MUL(r'\*', infix_bp=100),
+    InfixOperator.DIV(r'/', infix_bp=100),
+    InfixOperator.MOD(r'%', infix_bp=100),
 
-    Punctuator.LT_OP(r'<'),
-    Punctuator.GT_OP(r'>'),
-    Punctuator.LEQ_OP(r'<='),
-    Punctuator.GEQ_OP(r'>='),
-    Punctuator.EQ_OP(r'=='),
-    Punctuator.NEQ_OP(r'!='),
+    InfixOperator.LSHIFT(r'<<', infix_bp=80),
+    InfixOperator.RSHIFT(r'>>', infix_bp=80),
+    InfixOperator.LROT(r'<<<', infix_bp=80),
+    InfixOperator.RROT(r'>>>', infix_bp=80),
+
+    InfixOperator.LT_OP(r'<', infix_bp=70),
+    InfixOperator.GT_OP(r'>', infix_bp=70),
+    InfixOperator.LEQ_OP(r'<=', infix_bp=70),
+    InfixOperator.GEQ_OP(r'>=', infix_bp=70),
+
+    InfixOperator.EQ_OP(r'==', infix_bp=60),
+    InfixOperator.NEQ_OP(r'!=', infix_bp=60),
+
+    InfixOperator.BITWISE_AND(r'&', infix_bp=50),
+    InfixOperator.BITWISE_XOR(r'\^', infix_bp=40),
+    InfixOperator.BITWISE_OR(r'\|', infix_bp=30),
+
+    InfixOperator.LOGICAL_AND(r'&&', infix_bp=20),
+    InfixOperator.LOGICAL_OR(r'\|\|', infix_bp=10),
+
+    UnaryOrInfixOperator.INC(r'\+', unary_bp=100, infix_bp=90),
+    UnaryOrInfixOperator.DEC(r'-', unary_bp=100, infix_bp=90),
 )
 
 ################################################################################
@@ -141,6 +149,13 @@ FunctionStatements = (
     Function.FunctionDeclaration(r'{t.DataType}{t.LITERAL}{s.FunctionArgumentList}{s.RegularBlock}'),
 )
 
+Variable = StatementType.Variable()
+
+VariableStatements = (
+    Variable.VariableDeclaration(r'{t.DataType}{t.LITERAL}({t.EQUAL}{t.SimpleExpression}|){t.SEMICOLON}'),
+    Variable.VariableAssignment(r'{t.LITERAL}({t.EQUAL}{t.SimpleExpression}|)'),
+)
+
 Block = StatementType.Block()
 
 BlockStatements = (
@@ -148,24 +163,31 @@ BlockStatements = (
     Block.LoopBlock(r'{t.LBRACE}({s.Jump}|{s.Statement}|{s.RegularBlock})*{t.RBRACE}'),
 )
 
-
 Jump = StatementType.Jump()
 
 JumpStatements = (
     Jump.Break(r'{t.BREAK}{t.SEMICOLON}'),
     Jump.Continue(r'{t.CONTINUE}{t.SEMICOLON}'),
 )
+
 Control = StatementType.Control()
 
 ControlStatements = (
-    Control.If(r'{t.IF}{t.LPAREN}{t.RPAREN}{s.RegularBlock}'),
-    Control.IfElse(r'{s.If}{t.ELSE}{s.RegularBlock}'),
-    Control.While(r'{t.WHILE}{t.LPAREN}{t.RPAREN}{s.RegularBlock}'),
-    Control.For(r'{t.FOR}{t.LPAREN}{t.RPAREN}{s.RegularBlock}'),
+    Control.If(r'{t.IF}{t.LPAREN}{s.SimpleExpression}{t.RPAREN}{s.RegularBlock}({t.ELSE}{s.Statement}|)'),
+    Control.While(r'{t.WHILE}{t.LPAREN}{s.SimpleExpression}{t.RPAREN}{s.LoopBlock}'),
+    Control.For(r'{t.FOR}{t.LPAREN}({s.SimpleExpression}|){t.SEMICOLON}({s.SimpleExpression}|){t.SEMICOLON}({s.SimpleExpression}|){t.RPAREN}{s.LoopBlock}'),
 )
 
-Statements = (
-    StatementType.Empty(r'{t.SEMICOLON}'),
-)
+#Statements = (
+#    StatementType.Empty(r'{t.SEMICOLON}'),
+#    StatementType.SimpleExpression(r'{t.LITERAL}|{t.CONSTANT}')
+#)
 
-Statements = (ProgramStatement,) + FunctionStatements + BlockStatements + JumpStatements #JumpStatements + ControlStatements
+Statements = (ProgramStatement,) + FunctionStatements + BlockStatements + JumpStatements # + ControlStatements
+
+################################################################################
+### ASTs
+################################################################################
+
+#class FunctionDeclaration(AST):
+#    __statement__ = Function.FunctionDeclaration

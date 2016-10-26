@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from stella.core.utils import RewindableIterator
-from stella.core.interpreter.lexer import Tokenizer, Lexer, LexError
+from stella.core.interpreter.lexer import Tokenizer, Lexer
 from stella.core.interpreter.productions import StatementType
 from stella.core.automata import ENFA, Epsilon
 
