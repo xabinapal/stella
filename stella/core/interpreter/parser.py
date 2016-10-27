@@ -66,9 +66,11 @@ class Parser(object):
                     next_input = p.get_ast()
                     automaton.input(t)
                     is_statement = True
+                    self.lexer.delete()
                     self.lexer = p.lexer
                     break;
                 except ParseError:
+                    p.lexer.delete()
                     pass
 
         if not is_statement:

@@ -87,10 +87,7 @@ class RewindableIteratorBase(metaclass=abc.ABCMeta):
     def _rewind(self, instance_id):
         self.buf_pos[instance_id] = self.commit_pos[instance_id]
 
-    def _commit(self, instance_id):
-        self.commit_pos[instance_id] = self.buf_pos[instance_id]
-
-        min_pos = self.commit_pos[instance_id]
+    def _pop_buffer(self, min_pos):
         for x in self.commit_pos.values():
             if min_pos > x:
                 min_pos = x
@@ -102,6 +99,26 @@ class RewindableIteratorBase(metaclass=abc.ABCMeta):
             self.commit_pos[x] -= min_pos
 
         del self.buffer[:min_pos]
+
+    def _commit(self, instance_id):
+        self.commit_pos[instance_id] = self.buf_pos[instance_id]
+
+        min_pos = self.commit_pos[instance_id]
+        for x in self.commit_pos.values():
+            if min_pos > x:
+                min_pos = x
+
+        self._pop_buffer(min_pos)
+
+    def _delete(self, instance_id):
+        commit_pos = self.commit_pos[instance_id]
+
+        del self.buf_pos[instance_id]
+        del self.commit_pos[instance_id]
+
+        is_minimum = all(commit_pos < x for x in self.commit_pos.values())
+        if is_minimum:
+            self._pop_buffer(commit_pos)
 
 ################################################################################
 ### RewindableIterator
@@ -134,3 +151,7 @@ class RewindableIterator(object):
 
     def clone(self):
         return self.__class__(self.base, self.instance_id)
+
+    def delete(self):
+        return self.base._delete(self.instance_id)
+
