@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import io
-import abc
 
 __all__ = ['CharStream', 'RewindableIterator']
 
@@ -49,7 +48,7 @@ class CharStream(object):
 ################################################################################
 ### RewindableIteratorBase
 ################################################################################
-class RewindableIteratorBase(metaclass=abc.ABCMeta):
+class RewindableIteratorBase(object):
     def __init__(self, iterator):
         self.iterator = iterator
         self.buffer = []

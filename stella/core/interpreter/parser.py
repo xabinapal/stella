@@ -5,7 +5,9 @@ from stella.core.interpreter.lexer import Tokenizer, Lexer
 from stella.core.interpreter.productions import StatementType
 from stella.core.automata import ENFA, Epsilon
 
-__all__ = ['ParseError', 'Parser']
+import abc
+
+__all__ = ['ParseError', 'Parser', 'RDParser', 'TDOPParser']
 
 ################################################################################
 ### ParseError
@@ -18,7 +20,14 @@ class ParseError(SyntaxError):
 ### Parser
 ################################################################################
 
-class Parser(object):
+class Parser(metaclass=abc.ABCMeta):
+    pass
+
+################################################################################
+### RDParser
+################################################################################
+
+class RDParser(Parser):
     def __init__(self, lexer, statement, automata, ignore=[]):
         if isinstance(lexer, RewindableIterator):
             self.lexer = lexer.clone()
@@ -61,7 +70,8 @@ class Parser(object):
         for t in automaton.current_transitions:
             state = StatementType.parse_str_repr(t)
             if state:
-                p = Parser(self.lexer, state, self.automata, self.ignore)
+                parser = state.parser if state.parser else self._class__
+                p = parser(self.lexer, state, self.automata, self.ignore)
                 try:
                     next_input = p.get_ast()
                     automaton.input(t)
@@ -115,3 +125,10 @@ class Parser(object):
 
     def _create_ast(self, inputs):
         return inputs
+    
+################################################################################
+### TDOPParser
+################################################################################
+
+class TDOPParser(Parser):
+    pass

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from stella.core.interpreter.productions import TokenType, StatementType
+from stella.core.interpreter.parser import RDParser, TDOPParser
 
 __all__ = ['Tokens', 'Statements', 'ProgramStatement']
 
@@ -137,9 +138,9 @@ IgnoreTokens = (
 ### Statements
 ################################################################################
 
-ProgramStatement = StatementType.Program(r'{s.FunctionDeclaration}({s.Program}|)')
+ProgramStatement = StatementType.Program(r'{s.FunctionDeclaration}({s.Program}|)', parser=RDParser)
 
-Function = StatementType.Function()
+Function = StatementType.Function(parser=RDParser)
 
 FunctionStatements = (
     Function.FunctionArgument(r'{t.DataType}{t.LITERAL}'),
@@ -149,28 +150,28 @@ FunctionStatements = (
     Function.FunctionDeclaration(r'{t.DataType}{t.LITERAL}{s.FunctionArgumentList}{s.RegularBlock}'),
 )
 
-Variable = StatementType.Variable()
+Variable = StatementType.Variable(parser=RDParser)
 
 VariableStatements = (
     Variable.VariableDeclaration(r'{t.DataType}{t.LITERAL}({t.EQUAL}{t.SimpleExpression}|){t.SEMICOLON}'),
     Variable.VariableAssignment(r'{t.LITERAL}({t.EQUAL}{t.SimpleExpression}|)'),
 )
 
-Block = StatementType.Block()
+Block = StatementType.Block(parser=RDParser)
 
 BlockStatements = (
     Block.RegularBlock(r'{t.LBRACE}({s.Statement}|{s.RegularBlock})*{t.RBRACE}'),
     Block.LoopBlock(r'{t.LBRACE}({s.Jump}|{s.Statement}|{s.RegularBlock})*{t.RBRACE}'),
 )
 
-Jump = StatementType.Jump()
+Jump = StatementType.Jump(parser=RDParser)
 
 JumpStatements = (
     Jump.Break(r'{t.BREAK}{t.SEMICOLON}'),
     Jump.Continue(r'{t.CONTINUE}{t.SEMICOLON}'),
 )
 
-Control = StatementType.Control()
+Control = StatementType.Control(parser=RDParser)
 
 ControlStatements = (
     Control.If(r'{t.IF}{t.LPAREN}{s.SimpleExpression}{t.RPAREN}{s.RegularBlock}({t.ELSE}{s.Statement}|)'),
@@ -178,9 +179,10 @@ ControlStatements = (
     Control.For(r'{t.FOR}{t.LPAREN}({s.SimpleExpression}|){t.SEMICOLON}({s.SimpleExpression}|){t.SEMICOLON}({s.SimpleExpression}|){t.RPAREN}{s.LoopBlock}'),
 )
 
+StatementType.SimpleExpression(parser=TDOPParser)
+
 #Statements = (
 #    StatementType.Empty(r'{t.SEMICOLON}'),
-#    StatementType.SimpleExpression(r'{t.LITERAL}|{t.CONSTANT}')
 #)
 
 Statements = (ProgramStatement,) + FunctionStatements + BlockStatements + JumpStatements # + ControlStatements

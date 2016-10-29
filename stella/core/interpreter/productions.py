@@ -63,41 +63,36 @@ class _ProductionType(tuple):
     def __repr__(self):
         return '<' + self.__class__.__name__ + '> ' + '.'.join(self)
 
+    def _check_value(self, value):
+        return value[0] == '{' and value[-1] == '}'
+
+    def _compare_tuples(self, item, comparing):
+        while comparing and item:
+            if comparing.pop() == item[-1]:
+                item.pop()
+
+        return not item
+
     def is_str_repr(self, value):
-        if not isinstance(value, str):
+        if not isinstance(value, str) or not self._check_value(value):
             return False
 
-        if value[0] != '{' or value[-1] != '}':
-            return False
-            
         parents = [x for x in self]
         parents.reverse()
         
         tokenized_value = value[1:-1].split('.')
         tokenized_value.reverse()
         
-        while parents and tokenized_value:
-            if parents.pop() == tokenized_value[-1]:
-                tokenized_value.pop()
-
-        return not tokenized_value
+        return self._compare_tuples(tokenized_value, parents)
 
     def parse_str_repr(self, value):
-        if not isinstance(value, str):
-            return None
-
-        if value[0] != '{' or value[-1] != '}':
+        if not isinstance(value, str) or not self._check_value(value):
             return False
 
         value = value[1:-1].split('.')
         for x in self.items:
             item = [y for y in x]
-            tokenized_value = value[:]
-            while item and tokenized_value:
-                if item.pop() == tokenized_value[-1]:
-                    tokenized_value.pop()
-
-            if not tokenized_value:
+            if self._compare_tuples(value, item):
                 return x
 
         return None
@@ -151,6 +146,8 @@ class Token(object):
 ################################################################################
 
 class _StatementType(_ProductionType):
-    pass
+    @staticmethod
+    def _init_member(member, **kw):
+        member.parser = kw.get('parser', member.parent.parser)
 
 StatementType = _StatementType('s')
